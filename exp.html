@@ -315,13 +315,13 @@ function propertiesSetterFromInput(input){
 // Adding the Resizers
 function addingResizers(Div) {
 
-  if(handlesExist) { console.log("handlesExist is true , stopped adding Resizers");
-    return;}
-   
-    
+  if(handlesExist) { 
+    console.log("handlesExist is true , stopped adding Resizers");
+    return;
+  }
   console.log("Resizers added");
-  
 
+   // for adding different class to different handles
   const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
 
   // Mouse move logic
@@ -329,11 +329,19 @@ function addingResizers(Div) {
 
     propertiesSetterInInput()
 
+    // position of cursor wrt to scree
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
 
+    console.log("currentX ", currentX);
+    console.log("Div is  ",DivX);
+
+    
+
     if (isWidth) {
       const width = currentX - DivX;
+      console.log("width: " + width);
+   
       Div.style.width = `${Math.abs(width)}px`;
       Div.style.left = `${Math.min(DivX, currentX)}px`;
     }
@@ -372,35 +380,40 @@ function addingResizers(Div) {
 
     handle.addEventListener('mousedown', (e) => {
 
-      const DivX = e.clientX - rect.left;
-      const DivY = e.clientY - rect.top;
-      const offsetX = Div.offsetWidth;
-      const offsetY = Div.offsetHeight;
+      const offsetX = Div.offsetLeft;
+      const offsetY = Div.offsetTop;
+      const offsetWidth = Div.offsetWidth;
+      const offsetHeight = Div.offsetHeight;
+
+      console.log(offsetX, offsetY, offsetWidth, offsetHeight);
+      console.log("isdv ",offsetX + offsetWidth);
+      
+      
 
       switch (position) {
         case 'top-left':
-          handleMouseDown(e, DivX + offsetX, DivY + offsetY, true, true);
+          handleMouseDown(e, offsetX + offsetWidth, offsetY + offsetHeight, true, true);
           break;
         case 'top-right':
-          handleMouseDown(e, DivX - offsetX, DivY + offsetY, true, true);
+          handleMouseDown(e, offsetX , offsetY + offsetHeight, true, true);
           break;
         case 'bottom-right':
-          handleMouseDown(e, DivX - offsetX, DivY - offsetY, true, true);
+          handleMouseDown(e, offsetX , offsetY, true, true);
           break;
         case 'bottom-left':
-          handleMouseDown(e, DivX + offsetX, DivY - offsetY, true, true);
+          handleMouseDown(e, offsetX + offsetWidth, offsetY , true, true);
           break;
         case 'top':
-          handleMouseDown(e, DivX, DivY + offsetY, false, true);
+          handleMouseDown(e, offsetX , offsetY + offsetHeight, false, true);
           break;
         case 'bottom':
-          handleMouseDown(e, DivX, DivY - offsetY, false, true);
+          handleMouseDown(e, offsetX, offsetY , false, true);
           break;
         case 'left':
-          handleMouseDown(e, DivX + offsetX, DivY, true, false);
+          handleMouseDown(e, offsetX + offsetWidth, offsetY, true, false);
           break;
         case 'right':
-          handleMouseDown(e, DivX - offsetX, DivY, true, false);
+          handleMouseDown(e, offsetX , offsetY, true, false);
           break;
       }
     });
