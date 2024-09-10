@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draw and Resize Squares</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+
+    .rectangle {
+      position: absolute;
+      background: rgb(255, 255, 255);
+      cursor: grab;
+      border: 2px solid #3498db;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .rectangle:hover {
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .screen {
+      background-color: #ecf0f1;
+      position: relative;
+      top: 10%;
+      left: 10%;
+      width: 75%;
+      height: 80%;
+      border-radius: 10px;
+      border: 2px solid #bdc3c7;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #3498db;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+    .handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+    .handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+    .handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
+    .handle.top { top: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .handle.right { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; }
+    .handle.bottom { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .handle.left { top: 50%; left: -5px; transform: translateY(-50%); cursor: ew-resize; }
+
+    .sidebar {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      width: 250px;
+      height: 100vh;
+      padding: 20px;
+      box-shadow: 4px 0px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar li {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      background-color: #34495e;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar li:hover {
+      background-color: #1abc9c;
+    }
+
+    .setProperties {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .setProperties li {
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .setProperties input {
+      width: 50%;
+      padding: 5px;
+      border: none;
+      border-radius: 5px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .setProperties input[type="color"] {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .screen {
+      cursor: crosshair;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div id="sidebar" class="sidebar">
+    <h2>Controls</h2>
+    <ul>
+      <li id="divCr">Add &lt;div&gt;</li>
+      <li>Add &lt;a&gt;</li>
+      <li>Add &lt;p&gt;</li>
+    </ul>
+    <div class="setProperties">
+      <li>X: <input type="text" name="left"></li>
+      <li>Y: <input type="text" name="top"></li>
+      <li>Width: <input type="text" name="width"></li>
+      <li>Height: <input type="text" name="height"></li>
+      <li>Bg Color: <input type="color" name="backgroundColor"></li>
+      <li>Border Width: <input type="text" name="borderWidth"></li>
+      <li>Border Color: <input type="color" name="borderColor"></li>
+      <li>Border Radius: <input type="text" name="borderRadius"></li>
+    </div>
+  </div>
+
+  <div class="screen"></div>
+
+  
+
+
+  
+
+  <script>
+    const screen = document.querySelector('.screen');
+    const DivCreater = document.querySelector('#divCr');
+    const rect = screen.getBoundingClientRect();
+
+    let isDrawing = false;
+    let handlesExist = false;
+    let DivX, DivY , newDiv , lastSelected ;
+
+    let divIdNumber = 1;
+
+function switchManupilation() {
+
+      DivCreater.style.backgroundColor = DivCreater.style.backgroundColor === "rgb(0, 128, 255)"? "#333" : "rgb(0, 128, 255)";
+      // DivCreater.style.color = DivCreater.style.color === "black"? "white" : "black";
+      screen.style.cursor = screen.style.cursor === "crosshair" ? "default" : "crosshair";
+
+      lastSelected = newDiv;
+  
+    }
+
+DivCreater.addEventListener('click', () => {
+      switchManupilation();
+      isDrawing = true;
+    });
+
+screen.addEventListener('mousedown', (e)=>{
+
+      if(!isDrawing){
+        console.log("isDrawing is false , ran removingResizers , stopped creation of div");
+        removingResizers(e.target);
+        return ;
+      } 
+
+      // Loop through each child using for...of
+      if (lastSelected) {
+           removingResizers(lastSelected);// Perform actions on each child
+         }
+
+      if(!handlesExist) {
+        console.log("handleExist is false  ,thats why properties display is none");
+        document.querySelector('.setProperties').style.display = 'none';
+      }
+
+      if(e.button === 2) {alert("use left mouse button")} ;
+
+      DivX = e.clientX - rect.left; // cursor position inside screen
+      DivY = e.clientY - rect.top; // cursor position inside screen
+
+      // create the newDiv and adding it to the screen
+      newDiv = document.createElement('div');
+      newDiv.className ='rectangle';
+      newDiv.id = `div${divIdNumber++}`;
+      screen.appendChild(newDiv);
+      console.log("Div created");
+      
+
+      //adding resizers to the newDiv
+      addingResizers(newDiv)
+    
+
+    // setting the newDiv's position from left and top
+      newDiv.style.left = `${DivX}px`;
+      newDiv.style.top = `${DivY}px`;
+
+      // showing its properties in sidebar
+      document.querySelector('.setProperties').style.display = 'grid';
+
+      // adding event listeners so to activate resizers on it anytime with oneclick
+      newDiv.addEventListener('click', ()=>addingResizers(newDiv));
+      dragger(newDiv);
+
+      const onMouseUp = (e)=> {
+            isDrawing = false;
+            console.log("isDrawing is set to false");
+
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            switchManupilation();
+
+            // is no value is set the div will take default value
+            if(newDiv.offsetHeight === 0) {defaultValueSetter(e,newDiv);}
+    }
+
+      // adding eventListeners to give the div width and height
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      
+     
+    });
+
+function onMouseMove(e) {
+
+      if(!isDrawing){ console.log("isDrawing is false so it STOPPED onMouseMove "); return ;} 
+
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+      
+
+      const width = currentX - DivX;
+      const height = currentY - DivY;
+
+      // setting newDiv's width and height and setting it to positive value
+      newDiv.style.width = `${Math.abs(width)}px`;
+      newDiv.style.height = `${Math.abs(height)}px`;
+
+      // setting new position of newDiv's position from left and top , if cursor moves from right to left
+      newDiv.style.left = `${Math.min(DivX, currentX)}px`;
+      newDiv.style.top = `${Math.min(DivY, currentY)}px`;
+
+      propertiesSetterInInput()
+
+    }
+ 
+// this function sets default values for the div if nothing is set for it    
+function defaultValueSetter(e,Div) {
+      Div.style.left = `${e.clientX-rect.left}px`;
+      Div.style.top = `${e.clientY-rect.top}px`;
+      Div.style.width = "100px";
+      Div.style.height = "100px";
+}    
+
+
+function propertiesSetterInInput() {
+
+  const properties = document.querySelectorAll('.setProperties input');
+  
+  let selectedTarget = newDiv;
+  
+  let computedStyles = getComputedStyle(selectedTarget);
+
+  const rgbToHex =(rgb)=> {
+     if (!rgb) return "#ffffff"; 
+  
+    // Extract the RGB values from the computed style
+     let result = rgb.match(/\d+/g); 
+  
+     if (!result || result.length < 3) return "#ffffff"; // Ensure RGB format is valid
+
+     return "#" + result.slice(0, 3)     // Convert each RGB part to a two-digit hex value
+       .map(x => parseInt(x).toString(16).padStart(2, '0'))
+      .join('');
+}
+  
+  properties.forEach(input => {
+    let styleProperty = input.name; 
+    
+    if (input.type === 'color') {
+      // converted the color to HEX because the <input type="color"> element in HTML accepts color values in the HEX format by default
+      input.value = rgbToHex(computedStyles[styleProperty]); 
+    } else {
+      input.value = computedStyles[styleProperty]; 
+    }
+  });
+}
+
+
+document.querySelectorAll('.setProperties input').forEach(input =>{
+  input.addEventListener('input',() => propertiesSetterFromInput(input));
+})
+
+function propertiesSetterFromInput(input){
+  const newValue = input.value;        
+  const propertyName = input.name;   
+
+  let selectedTarget = newDiv; 
+
+  selectedTarget.style[propertyName] = newValue;
+
+}
+    
+
+// Adding the Resizers
+function addingResizers(Div) {
+
+  if(handlesExist) { 
+    console.log("handlesExist is true , stopped adding Resizers");
+    return;
+  }
+  console.log("Resizers added");
+
+   // for adding different class to different handles
+  const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
+
+  // Mouse move logic
+  const createMouseMoveHandler = (DivX, DivY, isWidth, isHeight) => (e) => {
+
+    propertiesSetterInInput()
+
+    // position of cursor wrt to scree
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+
+    console.log("currentX ", currentX);
+    console.log("Div is  ",DivX);
+
+    
+
+    if (isWidth) {
+      const width = currentX - DivX;
+      console.log("width: " + width);
+   
+      Div.style.width = `${Math.abs(width)}px`;
+      Div.style.left = `${Math.min(DivX, currentX)}px`;
+    }
+
+    if (isHeight) {
+      const height = currentY - DivY;
+      Div.style.height = `${Math.abs(height)}px`;
+      Div.style.top = `${Math.min(DivY, currentY)}px`;
+    }
+
+  };
+
+  // Common mouse down logic
+  const handleMouseDown = (e, DivX, DivY, isWidth, isHeight) => {
+    const mouseMoveHandler = createMouseMoveHandler(DivX, DivY, isWidth, isHeight);
+
+    const mouseUpHandler = () => {
+      document.removeEventListener('mousemove', mouseMoveHandler);
+      document.removeEventListener('mouseup', mouseUpHandler);
+
+      isDrawing = false;
+      console.log("isDrawing is set to false");
+      handlesExist = true;
+      console.log("handlesExist is set to true");
+
+    };
+
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+  };
+
+  handles.forEach(position => {
+    const handle = document.createElement('div');
+    handle.className = `handle ${position}`;
+    Div.appendChild(handle);
+
+    handle.addEventListener('mousedown', (e) => {
+
+      const offsetX = Div.offsetLeft;
+      const offsetY = Div.offsetTop;
+      const offsetWidth = Div.offsetWidth;
+      const offsetHeight = Div.offsetHeight;
+
+      console.log(offsetX, offsetY, offsetWidth, offsetHeight);
+      console.log("isdv ",offsetX + offsetWidth);
+      
+      
+
+      switch (position) {
+        case 'top-left':
+          handleMouseDown(e, offsetX + offsetWidth, offsetY + offsetHeight, true, true);
+          break;
+        case 'top-right':
+          handleMouseDown(e, offsetX , offsetY + offsetHeight, true, true);
+          break;
+        case 'bottom-right':
+          handleMouseDown(e, offsetX , offsetY, true, true);
+          break;
+        case 'bottom-left':
+          handleMouseDown(e, offsetX + offsetWidth, offsetY , true, true);
+          break;
+        case 'top':
+          handleMouseDown(e, offsetX , offsetY + offsetHeight, false, true);
+          break;
+        case 'bottom':
+          handleMouseDown(e, offsetX, offsetY , false, true);
+          break;
+        case 'left':
+          handleMouseDown(e, offsetX + offsetWidth, offsetY, true, false);
+          break;
+        case 'right':
+          handleMouseDown(e, offsetX , offsetY, true, false);
+          break;
+      }
+    });
+  });
+}
+
+
+function dragger(Div) {
+
+  Div.addEventListener("mousedown", (e)=>{
+    if(e.target.className !== 'rectangle') return;
+
+    handlesExist = true;
+
+    console.log("handlesExist is set to true")
+    document.querySelector('.setProperties').style.display = 'grid'; 
+  
+    Div.style.cursor = "grabbing";
+
+    const rect = Div.getBoundingClientRect();
+    const DivX = e.clientX - rect.left;
+    const DivY = e.clientY - rect.top;
+    const DivLeft = Div.offsetLeft;
+    const DivTop = Div.offsetTop;
+    
+
+    const onMouseDrag = (e) => {
+
+      propertiesSetterInInput()
+
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+
+      const DragX = currentX - DivX;
+      const DragY = currentY - DivY;
+
+      Div.style.left = `${DragX + DivLeft}px`;
+      Div.style.top = `${DragY + DivTop}px`;
+    };
+
+    const mouseUpDragHandler = () => {
+      document.removeEventListener('mousemove', onMouseDrag);
+      document.removeEventListener('mouseup', mouseUpDragHandler);
+      Div.style.cursor = "grab";
+    };
+
+    document.addEventListener('mousemove', onMouseDrag);
+    document.addEventListener('mouseup', mouseUpDragHandler);
+
+
+  })}
+
+function removingResizers(Div){
+      const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
+
+      if(Div.querySelector('.handle.top'))
+      handles.forEach(position => {
+        const handle = Div.querySelector(`.handle.${position}`);
+        handle.remove()
+      });
+      handlesExist = false;
+      console.log('handlesExist is set to false');
+      
+    }
+
+  </script>
+
+
+</body>
+</html>
