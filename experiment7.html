@@ -25,7 +25,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
     }
 
     .rectangle:hover {
@@ -50,19 +49,20 @@
       width: 10px;
       height: 10px;
       background: #3b82f6;
-      border: 2px solid white;
+      border: 10px solid transparent;
       border-radius: 50%;
       cursor: pointer;
+      background-clip: padding-box;
     }
 
-    .handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
-    .handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
-    .handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
-    .handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
-    .handle.top { top: -6px; left: calc(50% - 6px); cursor: ns-resize; }
-    .handle.right { top: calc(50% - 6px); right: -6px; cursor: ew-resize; }
-    .handle.bottom { bottom: -6px; left: calc(50% - 6px); cursor: ns-resize; }
-    .handle.left { top: calc(50% - 6px); left: -6px; cursor: ew-resize; }
+    .handle.top-left { top: -14px; left: -14px; cursor: nwse-resize; }
+    .handle.top-right { top: -14px; right: -14px; cursor: nesw-resize; }
+    .handle.bottom-left { bottom: -14px; left: -14px; cursor: nesw-resize; }
+    .handle.bottom-right { bottom: -14px; right: -14px; cursor: nwse-resize; }
+    .handle.top { top: -14px; left: calc(50% - 15px); cursor: ns-resize; }
+    .handle.right { top: calc(50% - 15px); right: -14px; cursor: ew-resize; }
+    .handle.bottom { bottom: -14px; left: calc(50% - 15px); cursor: ns-resize; }
+    .handle.left { top: calc(50% - 15px); left: -14px; cursor: ew-resize; }
 
     .sidebar {
       height: 100%;
@@ -487,55 +487,112 @@ function propertiesSetterFromInput(input) {
   selectedTarget.style[propertyName] = newValue + (input.type === 'number' ? 'px' : '');
 }
 
+// Adding the Resizers
 function addingResizers(Div) {
-  if (handlesExist) return;
 
-  const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
+if(handlesExist) { 
+  console.log("handlesExist is true , stopped adding Resizers");
+  return;
+}
+console.log("Resizers added");
 
-  handles.forEach(position => {
-    const handle = document.createElement('div');
-    handle.className = `handle ${position}`;
-    Div.appendChild(handle);
+ // for adding different class to different handles
+const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
 
-    handle.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const startWidth = parseInt(getComputedStyle(Div).width, 10);
-      const startHeight = parseInt(getComputedStyle(Div).height, 10);
-      const startLeft = Div.offsetLeft;
-      const startTop = Div.offsetTop;
+// Mouse move logic
+const createMouseMoveHandler = (DivX, DivY, isWidth, isHeight) => (e) => {
 
-      const onMouseMove = (e) => {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+  propertiesSetterInInput()
 
-        if (position.includes('right')) Div.style.width = `${startWidth + dx}px`;
-        if (position.includes('bottom')) Div.style.height = `${startHeight + dy}px`;
+  // position of cursor wrt to scree
+  const currentX = e.clientX - rect.left;
+  const currentY = e.clientY - rect.top;
 
-        if (position.includes('left')) {
-          Div.style.width = `${startWidth - dx}px`;
-          Div.style.left = `${startLeft + dx}px`;
-        }
-        if (position.includes('top')) {
-          Div.style.height = `${startHeight - dy}px`;
-          Div.style.top = `${startTop + dy}px`;
-        }
+  console.log("currentX ", currentX);
+  console.log("Div is  ",DivX);
 
-        propertiesSetterInInput();
-      };
+  
 
-      const onMouseUp = () => {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      };
+  if (isWidth) {
+    const width = currentX - DivX;
+    console.log("width: " + width);
+ 
+    Div.style.width = `${Math.abs(width)}px`;
+    Div.style.left = `${Math.min(DivX, currentX)}px`;
+  }
 
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    });
+  if (isHeight) {
+    const height = currentY - DivY;
+    Div.style.height = `${Math.abs(height)}px`;
+    Div.style.top = `${Math.min(DivY, currentY)}px`;
+  }
+
+};
+
+// Common mouse down logic
+const handleMouseDown = (e, DivX, DivY, isWidth, isHeight) => {
+  const mouseMoveHandler = createMouseMoveHandler(DivX, DivY, isWidth, isHeight);
+
+  const mouseUpHandler = () => {
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+
+    isDrawing = false;
+    console.log("isDrawing is set to false");
+    handlesExist = true;
+    console.log("handlesExist is set to true");
+
+  };
+
+  document.addEventListener('mousemove', mouseMoveHandler);
+  document.addEventListener('mouseup', mouseUpHandler);
+};
+
+handles.forEach(position => {
+  const handle = document.createElement('div');
+  handle.className = `handle ${position}`;
+  Div.appendChild(handle);
+
+  handle.addEventListener('mousedown', (e) => {
+
+    const offsetX = Div.offsetLeft;
+    const offsetY = Div.offsetTop;
+    const offsetWidth = Div.offsetWidth;
+    const offsetHeight = Div.offsetHeight;
+
+    console.log(offsetX, offsetY, offsetWidth, offsetHeight);
+    console.log("isdv ",offsetX + offsetWidth);
+    
+    
+
+    switch (position) {
+      case 'top-left':
+        handleMouseDown(e, offsetX + offsetWidth, offsetY + offsetHeight, true, true);
+        break;
+      case 'top-right':
+        handleMouseDown(e, offsetX , offsetY + offsetHeight, true, true);
+        break;
+      case 'bottom-right':
+        handleMouseDown(e, offsetX , offsetY, true, true);
+        break;
+      case 'bottom-left':
+        handleMouseDown(e, offsetX + offsetWidth, offsetY , true, true);
+        break;
+      case 'top':
+        handleMouseDown(e, offsetX , offsetY + offsetHeight, false, true);
+        break;
+      case 'bottom':
+        handleMouseDown(e, offsetX, offsetY , false, true);
+        break;
+      case 'left':
+        handleMouseDown(e, offsetX + offsetWidth, offsetY, true, false);
+        break;
+      case 'right':
+        handleMouseDown(e, offsetX , offsetY, true, false);
+        break;
+    }
   });
-
-  handlesExist = true;
+});
 }
 
 function dragger(Div) {
