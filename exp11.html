@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Draw and Resize Squares</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      background-color: #f0f4f8;
+      display: flex;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .rectangle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.7);
+      cursor: move;
+      border: 2px solid #3b82f6;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      min-width: 50px;
+      min-height: 50px;
+    }
+
+    .rectangle:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .screen {
+      background-color: white;
+      position: relative;
+      top: 5%;
+      left: 5%;
+      width: 80%;
+      height: 90%;
+      overflow: hidden;
+      cursor: default;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #3b82f6;
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
+    .handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
+    .handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
+    .handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    .handle.top { top: -6px; left: calc(50% - 6px); cursor: ns-resize; }
+    .handle.right { top: calc(50% - 6px); right: -6px; cursor: ew-resize; }
+    .handle.bottom { bottom: -6px; left: calc(50% - 6px); cursor: ns-resize; }
+    .handle.left { top: calc(50% - 6px); left: -6px; cursor: ew-resize; }
+
+    .sidebar {
+      height: 100%;
+      width: 300px;
+      background-color: #ffffff;
+      color: #333333;
+      transition: all 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      background-color: #3b82f6;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #2563eb;
+      margin: -20px -20px 20px -20px;
+    }
+
+    .sidebar h2 {
+      margin: 0;
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 20px;
+      background-color: #f0f4f8;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 18px;
+      color: #4a5568;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+    }
+
+    .sidebar button:hover {
+      background-color: #2563eb;
+    }
+
+    .sidebar button.active {
+      background-color: #1d4ed8;
+    }
+
+    .setProperties li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #ffffff;
+      padding: 10px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      margin-bottom: 10px;
+    }
+
+    .setProperties li:hover {
+      background-color: #e2e8f0;
+    }
+
+    .setProperties input,
+    .setProperties select {
+      width: 50%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      background-color: #ffffff;
+      color: #333333;
+      transition: all 0.3s ease;
+    }
+
+    .setProperties input:focus,
+    .setProperties select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .setProperties input[type="color"] {
+      padding: 0;
+      width: 50px;
+      height: 30px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .setProperties label {
+      font-weight: 500;
+      color: #4a5568;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: #f0f4f8;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e0;
+      border-radius: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #a0aec0;
+    }
+
+    .dropdown-content {
+      display: none;
+      padding-left: 20px;
+    }
+
+    .dropdown-content.active {
+      display: block;
+    }
+
+    #propertyMenu {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 50vh;
+      }
+
+      .screen {
+        left: 0;
+        width: 100%;
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h2>Design Editor</h2>
+    </div>
+    <div class="sidebar-section">
+      <button id="divCr">Add &lt;div&gt;</button>
+    </div>
+    <div id="propertyMenu">
+      <div class="sidebar-section">
+        <h3 class="dropdown-trigger" data-target="styles">Styles</h3>
+        <div id="styles" class="dropdown-content">
+          <li class="backgroundColor">
+            <label for="backgroundColor">Background Color</label>
+            <input type="color" id="backgroundColor" name="backgroundColor">
+          </li>
+          <li class="color">
+            <label for="color">Text Color</label>
+            <input type="color" id="color" name="color">
+          </li>
+          <li class="fontFamily">
+            <label for="fontFamily">Font Family</label>
+            <select id="fontFamily" name="fontFamily">
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+            </select>
+          </li>
+          <li class="fontSize">
+            <label for="fontSize">Font Size (px)</label>
+            <input type="number" id="fontSize" name="fontSize">
+          </li>
+          <li class="fontWeight">
+            <label for="fontWeight">Font Weight</label>
+            <select id="fontWeight" name="fontWeight">
+              <option value="normal">Normal</option>
+              <option value="bold">Bold</option>
+              <option value="lighter">Lighter</option>
+              <option value="bolder">Bolder</option>
+            </select>
+          </li>
+          <li class="textAlign">
+            <label for="textAlign">Text Align</label>
+            <select id="textAlign" name="textAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+              <option value="justify">Justify</option>
+            </select>
+          </li>
+          <li class="textDecoration">
+            <label for="textDecoration">Text Decoration</label>
+            <select id="textDecoration" name="textDecoration">
+              <option value="none">None</option>
+              <option value="underline">Underline</option>
+              <option value="overline">Overline</option>
+              <option value="line-through">Line-through</option>
+            </select>
+          </li>
+          <li class="borderWidth">
+            <label for="borderWidth">Border Width</label>
+            <input type="number" id="borderWidth" name="borderWidth">
+          </li>
+          <li class="borderColor">
+            <label for="borderColor">Border Color</label>
+            <input type="color" id="borderColor" name="borderColor">
+          </li>
+          <li class="borderRadius">
+            <label for="borderRadius">Border Radius</label>
+            <input type="number" id="borderRadius" name="borderRadius">
+          </li>
+          <li class="boxShadow">
+            <label for="boxShadow">Box Shadow</label>
+            <input type="text" id="boxShadow" name="boxShadow" placeholder="0px 0px 10px #000000">
+          </li>
+          <li class="opacity">
+            <label for="opacity">Opacity</label>
+            <input type="range" id="opacity" name="opacity" min="0" max="1" step="0.1">
+          </li>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3 class="dropdown-trigger" data-target="layout">Layout</h3>
+        <div id="layout" class="dropdown-content">
+          <li class="width">
+            <label for="width">Width</label>
+            <input type="number" id="width" name="width">
+          </li>
+          <li class="height">
+            <label for="height">Height</label>
+            <input type="number" id="height" name="height">
+          </li>
+          <li class="padding">
+            <label for="padding">Padding (px)</label>
+            <input type="number" id="padding" name="padding">
+          </li>
+          <li class="margin">
+            <label for="margin">Margin (px)</label>
+            <input type="number" id="margin" name="margin">
+          </li>
+          <li class="display">
+            <label for="display">Display</label>
+            <select id="display" name="display">
+              <option value="block">Block</option>
+              <option value="inline">Inline</option>
+              <option value="inline-block">Inline-block</option>
+              <option value="flex">Flex</option>
+              <option value="grid">Grid</option>
+            </select>
+          </li>
+          <li class="position">
+            <label for="position">Position</label>
+            <select id="position" name="position">
+              <option value="static">Static</option>
+              <option value="relative">Relative</option>
+              <option value="absolute">Absolute</option>
+              <option value="fixed">Fixed</option>
+              <option value="sticky">Sticky</option>
+            </select>
+          </li>
+          <li class="zIndex">
+            <label for="zIndex">Z-Index</label>
+            <input type="number" id="zIndex" name="zIndex">
+          </li>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3 class="dropdown-trigger" data-target="animations">Animations</h3>
+        <div id="animations" class="dropdown-content">
+          <li class="transition">
+            <label for="transition">Transition</label>
+            <input type="text" id="transition" name="transition" placeholder="all 0.3s ease">
+          </li>
+          <li class="transform">
+            <label for="transform">Transform</label>
+            <input type="text" id="transform" name="transform" placeholder="rotate(45deg)">
+          </li>
+          <li class="animation">
+            <label for="animation">Animation</label>
+            <input type="text" id="animation" name="animation" placeholder="myAnimation 5s infinite">
+          </li>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3 class="dropdown-trigger" data-target="tags">Tags</h3>
+        <div id="tags" class="dropdown-content">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen"></div>
+
+  <script>
+    const screen = document.querySelector('.screen');
+    const DivCreater = document.querySelector('#divCr');
+    const rect = screen.getBoundingClientRect();
+    const setProperties = document.querySelector('.setProperties');
+    const propertyMenu = document.getElementById('propertyMenu');
+
+    let isDrawing = false;
+    let handlesExist = false;
+    let DivX, DivY, newDiv, lastSelected;
+    let divIdNumber = 1;
+
+    // Dropdown functionality
+    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const target = document.getElementById(trigger.dataset.target);
+        target.classList.toggle('active');
+      });
+    });
+
+    function switchManipulation() {
+      DivCreater.classList.toggle('active');
+      screen.style.cursor = screen.style.cursor === "crosshair" ? "default" : "crosshair";
+      lastSelected = newDiv;
+    }
+
+    DivCreater.addEventListener('click', () => {
+      switchManipulation();
+      isDrawing = !isDrawing;
+    });
+
+    screen.addEventListener('mousedown', (e) => {
+      if (!isDrawing) {
+        return;
+      }
+
+      DivX = e.clientX - rect.left;
+      DivY = e.clientY - rect.top;
+
+      newDiv = document.createElement('div');
+      newDiv.className = 'rectangle';
+      newDiv.id = `div${divIdNumber++}`;
+      screen.appendChild(newDiv);
+
+      addingResizers(newDiv);
+
+      newDiv.style.left = `${DivX}px`;
+      newDiv.style.top = `${DivY}px`;
+
+      selectElement(newDiv);
+      dragger(newDiv);
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    function onMouseMove(e) {
+      if (!isDrawing) return;
+
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+
+      const width = currentX - DivX;
+      const height = currentY - DivY;
+
+      newDiv.style.width = `${Math.abs(width)}px`;
+      newDiv.style.height = `${Math.abs(height)}px`;
+      newDiv.style.left = `${Math.min(DivX, currentX)}px`;
+      newDiv.style.top = `${Math.min(DivY, currentY)}px`;
+
+      propertiesSetterInInput();
+    }
+
+    function onMouseUp() {
+      isDrawing = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      switchManipulation();
+
+      if (newDiv.offsetWidth < 50 || newDiv.offsetHeight < 50) {
+        defaultValueSetter(newDiv);
+      }
+
+      // Show property menu after div is created and dropped
+      propertyMenu.style.display = 'block';
+    }
+
+    function defaultValueSetter(Div) {
+      Div.style.width = "100px";
+      Div.style.height = "100px";
+    }
+
+    function propertiesSetterInInput() {
+      const properties = document.querySelectorAll('.sidebar-section input, .sidebar-section select');
+      let selectedTarget = lastSelected || newDiv;
+      let computedStyles = getComputedStyle(selectedTarget);
+
+      properties.forEach(input => {
+        let styleProperty = input.name;
+        if (input.type === 'color') {
+          input.value = rgbToHex(computedStyles[styleProperty]);
+        } else if (input.type === 'range') {
+          input.value = computedStyles[styleProperty];
+        } else if (input.tagName === 'SELECT') {
+          input.value = computedStyles[styleProperty];
+        } else {
+          input.value = styleProperty === 'zIndex' ? computedStyles[styleProperty] : 
+                        (parseFloat(computedStyles[styleProperty]) || computedStyles[styleProperty] || '');
+        }
+      });
+    }
+
+    document.querySelectorAll('.sidebar-section input, .sidebar-section select').forEach(input => {
+      input.addEventListener('input', () => propertiesSetterFromInput(input));
+    });
+
+    function propertiesSetterFromInput(input) {
+      const newValue = input.value;
+      const propertyName = input.name;
+      let selectedTarget = lastSelected || newDiv;
+      if (input.type === 'number' || input.type === 'range') {
+        selectedTarget.style[propertyName] = propertyName === 'opacity' ? newValue : newValue + 'px';
+      } else {
+        selectedTarget.style[propertyName] = newValue;
+      }
+    }
+
+    function addingResizers(Div) {
+      const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
+
+      handles.forEach(position => {
+        const handle = document.createElement('div');
+        handle.className = `handle ${position}`;
+        Div.appendChild(handle);
+
+        handle.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startWidth = parseInt(document.defaultView.getComputedStyle(Div).width, 10);
+          const startHeight = parseInt(document.defaultView.getComputedStyle(Div).height, 10);
+          const startLeft = Div.offsetLeft;
+          const startTop = Div.offsetTop;
+
+          const onMouseMove = (e) => {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            if (position.includes('right')) {
+              Div.style.width = `${startWidth + dx}px`;
+            }
+            if (position.includes('bottom')) {
+              Div.style.height = `${startHeight + dy}px`;
+            }
+            if (position.includes('left')) {
+              Div.style.width = `${startWidth - dx}px`;
+              Div.style.left = `${startLeft + dx}px`;
+            }
+            if (position.includes('top')) {
+              Div.style.height = `${startHeight - dy}px`;
+              Div.style.top = `${startTop + dy}px`;
+            }
+
+            propertiesSetterInInput();
+          };
+
+          const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          };
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+      });
+    }
+
+    function dragger(Div) {
+      Div.addEventListener("mousedown", (e) => {
+        if (e.target.className !== 'rectangle') return;
+
+        selectElement(Div);
+
+        const startX = e.clientX - Div.offsetLeft;
+        const startY = e.clientY - Div.offsetTop;
+
+        const onMouseMove = (e) => {
+          Div.style.left = `${e.clientX - startX}px`;
+          Div.style.top = `${e.clientY - startY}px`;
+          propertiesSetterInInput();
+        };
+
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    }
+
+    function rgbToHex(rgb) {
+      if (!rgb) return "#ffffff";
+      let result = rgb.match(/\d+/g);
+      if (!result || result.length < 3) return "#ffffff";
+      return "#" + result.slice(0, 3)
+        .map(x => parseInt(x).toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function selectElement(element) {
+      if (lastSelected) {
+        lastSelected.style.outline = 'none';
+      }
+      lastSelected = element;
+      element.style.outline = '2px solid #3b82f6';
+      propertiesSetterInInput();
+    }
+
+    // Deselect when clicking on the screen
+    screen.addEventListener('click', (e) => {
+      if (e.target === screen) {
+        if (lastSelected) {
+          lastSelected.style.outline = 'none';
+          lastSelected = null;
+        }
+      }
+    });
+
+    // Make the website reactive
+    function adjustLayout() {
+      const isMobile = window.innerWidth <= 768;
+      const sidebar = document.getElementById('sidebar');
+      const screen = document.querySelector('.screen');
+
+      if (isMobile) {
+        sidebar.style.width = '100%';
+        sidebar.style.height = '50vh';
+        screen.style.width = '100%';
+        screen.style.height = '50vh';
+        screen.style.left = '0';
+      } else {
+        sidebar.style.width = '300px';
+        sidebar.style.height = '100%';
+        screen.style.width = '80%';
+        screen.style.height = '90%';
+        screen.style.left = '5%';
+      }
+    }
+
+    window.addEventListener('resize', adjustLayout);
+    adjustLayout(); // Call once at start to set initial layout
+  </script>
+</body>
+</html>
