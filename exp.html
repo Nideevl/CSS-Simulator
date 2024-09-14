@@ -3,485 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Draw and Resize Squares</title>
+  <title>Slide Slider</title>
   <style>
     body {
       margin: 0;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-      background-color: rgb(158, 158, 158);
+      padding: 0;
       display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #ffffff;
     }
-
-    .rectangle {
-      position: absolute;
-      background: rgb(205, 205, 205);
-      cursor: grab;
-      border: 3px inset solid pink;
+    #slider {
+      display: flex;
+      align-items: center;
+      width: 1350px;
+      height: 500px;
     }
-
-    .screen {
-      background-color: white;
-      position: relative;
-      top: 9%;
-      left: 5%;
-      width: 70%;
-      height: 80%;
+    #Slide-container {
+      display: flex;
+      align-items: center;
       overflow: hidden;
-      cursor: default;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.5s ease;
+      justify-content: center;
     }
-
-    .handle {
-      position: absolute;
-      width: 7px;
-      height: 7px;
-      background: rgb(61, 110, 255); /* Blue background */
-      border: 7px solid transparent; /* Transparent border */
-      border-radius: 50%;
-      cursor: pointer;
-      background-clip: padding-box; /* Prevent background from "bleeding" into the border */
-}
-
-
-    /* Position handles on the corners & 4 sides */
-    .handle.top-left { top: -9px; left: -9px; cursor: nwse-resize; z-index: 3; }
-    .handle.top-right { top: -9px; right: -9px; cursor: nesw-resize; z-index: 3; }
-    .handle.bottom-left { bottom: -9px; left: -9px; cursor: nesw-resize; z-index: 3; }
-    .handle.bottom-right { bottom: -9px; right: -9px; cursor: nwse-resize; z-index: 3; }
-    .handle.top { top: -7px; left: -7px; width: 100%; height: 2px; cursor: ns-resize; }
-    .handle.right { top: -7px; right: -7px; height: 100%; width: 2px; cursor: ew-resize; }
-    .handle.bottom { bottom: -7px; left: -7px; width: 100%; height: 2px; cursor: ns-resize; }
-    .handle.left { top: -7px; left: -7px; height: 100%; width: 2px; cursor: ew-resize; }
-
-    .allowDiv {
-      width: 60px; 
-      height: 30px;
-      text-align: center;
-      padding-top: 10px;
+    .Slide {
+      min-width: 245.8px;
+      height: 275px;
+      background-color: #f1f1f1;
       color: white;
-      background-color: rgb(0, 0, 0);
-      margin: 200px;
-      cursor: pointer;
-      user-select: none;   
+      border-radius: 7px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Shadow effect */
+      transition: transform 0.5s ease-in-out; /* Smooth the movement */
     }
 
-  .sidebar {
-  height: 100%;
-  width: 300px;
-  top: 0;
-  background-color: #111;
-  padding-top: 20px;
-  transition: 0.3s;
-}
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
 
-.sidebar li {
-  padding: 10px 15px;
-  text-decoration: none;
-  display: flex;
-  text-align: center;
-  font-size: 18px;
-  color: white;
-  display: block;
-  transition: 0.3s;
-  cursor: pointer;
-  background-color: #333;
-  border-bottom: 1px solid #333;
-}
+    .mover {
+      animation: mover 0.62s linear;
+    }
 
-.sidebar li:hover {
-  background-color: #575757;
-}
-
-.setProperties {
-    display: none;
-    /* display: grid; */
-    margin-top: 20px;
-    grid-template-columns: auto auto;
-}
-
-.setProperties input {
-    width: 30%; 
-}
-
-.setProperties li {
-    border: 1px solid #333;
-    background-color: black;
-}
-
-#open-btn {
-  padding: 10px 20px;
-  font-size: 16px;
-}
-
-
+    @keyframes mover {
+      0% {
+        opacity: var(--opac);
+        z-index: var(--zi);
+        transform: var(--scale);
+        margin-left: var(--left);
+      }
+      100% {
+        margin-left: var(--LEFT);
+        opacity: var(--OPAC);
+        z-index: var(--ZI);
+        transform: var(--SCALE);
+      }
+    }
   </style>
 </head>
-
 <body>
-
-  <div id="sidebar" class="sidebar">
-    <li style="margin-top: 30px;" id="divCr"> Add &lt;div&gt;</li>
-    <li >Add &lt;a&gt;</li>
-    <li >Add &lt;p&gt;</li>
-  <div class="setProperties">
-      <li class="XCord">X                    <input type="text"  name="left"></li>
-      <li class="YCord">Y                    <input type="text"  name="top"></li> 
-      <li class="width">Width                <input type="text"  name="width"></li>
-      <li class="height">Height              <input type="text"  name="height"></li>
-      <li class="backgroundColor">Bg-Color   <input type="color" name="backgroundColor"></li>
-      <li class="color">Border-Width         <input type="text"  name="rotate"></li>
-      <li class="borderColor">Border-Color   <input type="color" name="borderColor"></li>
-      <li class="borderRadius">Border-Radius <input type="text"  name="borderRadius"></li>
-      <!-- <li class="fontFamily">Font       <input type="text"  name="fontFamily"></li>
-      <li class="fontSize">Font-Size         <input type="text"  name="fontSize"></li> -->
+  <div id="slider">
+    <button id="prev">←</button>
+    <div id="Slide-container"></div>
+    <button id="next">→</button>
   </div>
-</div>
-
-  <div class="screen"></div>
 
   <script>
-    const screen = document.querySelector('.screen');
-    const DivCreater = document.querySelector('#divCr');
-    const rect = screen.getBoundingClientRect();
+    const SlidesText = ['Bali', 'Bhutan', 'Canada', 'China', 'Indonesia', 'Italy', 'Japan', 'Philpins', 'Singapore', 'Srilanka'];
+    const SlideImg = ['Bali.jpg', 'Bhutan.jpg', 'canada.jpg', 'china.jpeg', 'indonesia.jpg', 'italy.jpg', 'jpn.jpg', 'philp.jpg', 'singapore.jpg', 'Srilanka.jpg'];
+    let FirstIndex = 0; 
+    let LastIndex = SlideImg.length - 1;
 
-    let isDrawing = false;
-    let handlesExist = false;
-    let DivX, DivY , newDiv , lastSelected ;
+    let status;
 
-    let divIdNumber = 1;
-
-function switchManupilation() {
-
-      DivCreater.style.backgroundColor = DivCreater.style.backgroundColor === "rgb(0, 128, 255)"? "#333" : "rgb(0, 128, 255)";
-      // DivCreater.style.color = DivCreater.style.color === "black"? "white" : "black";
-      screen.style.cursor = screen.style.cursor === "crosshair" ? "default" : "crosshair";
-
-      lastSelected = newDiv;
-  
+    function toggleButtons(disable) {
+      document.getElementById('prev').disabled = disable;
+      document.getElementById('next').disabled = disable;
     }
 
-DivCreater.addEventListener('click', () => {
-      switchManupilation();
-      isDrawing = true;
-    });
+    function updateSlides(ind) {
+      let slideContainer = document.getElementById('Slide-container');
+      slideContainer.innerHTML = ''; // Clear container
 
-screen.addEventListener('mousedown', (e)=>{
+      for (let i = 0; i < 5; i++) {
+        let index = (ind + i) % SlideImg.length;
+        let slide = document.createElement('div');
+        slide.classList.add('Slide');
+        slide.style.backgroundImage = `url('./images/${SlideImg[index]}')`; // Set image as background
+        slide.style.backgroundSize = 'cover'; // Ensure it covers the entire slide
+        slide.style.backgroundPosition = 'center'; // Center the image
 
-      if(!isDrawing){
-        console.log("isDrawing is false , ran removingResizers , stopped creation of div");
-        removingResizers(e.target);
-        return ;
-      } 
+        // Add the slide title inside the slide div
+        let slideTitle = document.createElement('h2');
+        slideTitle.textContent = SlidesText[index];
+        slide.appendChild(slideTitle);
 
-      // Loop through each child using for...of
-      if (lastSelected) {
-           removingResizers(lastSelected);// Perform actions on each child
-         }
+          slideContainer.appendChild(slide);
 
-      if(!handlesExist) {
-        console.log("handleExist is false  ,thats why properties display is none");
-        document.querySelector('.setProperties').style.display = 'none';
+        // Set style based on position
+        const positions = [{ z: 1, o: 0.6, s: 1 }, { z: 2, o: 0.8, s: 1.25 }, { z: 3, o: 1, s: 1.5 }, { z: 2, o: 0.8, s: 1.25 }, { z: 1, o: 0.6, s: 1 }];
+        Object.assign(slide.style, {
+          zIndex: positions[i].z,
+          opacity: positions[i].o,
+          transform: `scale(${positions[i].s})`
+        });
       }
 
-      if(e.button === 2) {alert("use left mouse button")} ;
-
-      DivX = e.clientX - rect.left; // cursor position inside screen
-      DivY = e.clientY - rect.top; // cursor position inside screen
-
-      // create the newDiv and adding it to the screen
-      newDiv = document.createElement('div');
-      newDiv.className ='rectangle';
-      newDiv.id = `div${divIdNumber++}`;
-      screen.appendChild(newDiv);
-      console.log("Div created");
-      
-
-      //adding resizers to the newDiv
-      addingResizers(newDiv)
-    
-
-    // setting the newDiv's position from left and top
-      newDiv.style.left = `${DivX}px`;
-      newDiv.style.top = `${DivY}px`;
-
-      // showing its properties in sidebar
-      document.querySelector('.setProperties').style.display = 'grid';
-
-      // adding event listeners so to activate resizers on it anytime with oneclick
-      newDiv.addEventListener('click', ()=>addingResizers(newDiv));
-      dragger(newDiv);
-
-      const onMouseUp = (e)=> {
-            isDrawing = false;
-            console.log("isDrawing is set to false");
-
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            switchManupilation();
-
-            // is no value is set the div will take default value
-            if(newDiv.offsetHeight === 0) {defaultValueSetter(e,newDiv);}
+      // Update indices
+      LastIndex = (ind + 4) % SlideImg.length;
+      FirstIndex = ind;
     }
 
-      // adding eventListeners to give the div width and height
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-      
-     
-    });
+    function moveLeft() {
+      status = 'left';
+      // Disable buttons during animation
+      toggleButtons(true);
 
-function onMouseMove(e) {
+      let slideContainer = document.getElementById('Slide-container');
+      let slide = document.createElement('div');
+      slide.classList.add('Slide');
+      slide.style.backgroundImage = `url('./images/${SlideImg[(LastIndex + 1) % SlideImg.length]}')`; // Set image as background
+      slide.style.backgroundSize = 'cover'; // Ensure it covers the entire slide
+      slide.style.backgroundPosition = 'center'; // Center the image
 
-      if(!isDrawing){ console.log("isDrawing is false so it STOPPED onMouseMove "); return ;} 
+      // Add the slide title inside the slide div
+      let slideTitle = document.createElement('h2');
+      slideTitle.textContent = SlidesText[(LastIndex + 1) % SlideImg.length];
+      slide.appendChild(slideTitle);
 
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
-      
+      slideContainer.appendChild(slide);
 
-      const width = currentX - DivX;
-      const height = currentY - DivY;
+      const slideStyles = [
+        { opac: 0.6, OPAC: 0,   zi: 1, ZI: 0, scale: 'scale(1)',    SCALE: 'scale(1)', left: '246px', LEFT: '-270px' },
+        { opac: 0.8, OPAC: 0.6, zi: 2, ZI: 1, scale: 'scale(1.25)', SCALE: 'scale(1)' },
+        { opac: 1,   OPAC: 0.8, zi: 3, ZI: 2, scale: 'scale(1.5)',  SCALE: 'scale(1.25)' },
+        { opac: 0.8, OPAC: 1,   zi: 2, ZI: 3, scale: 'scale(1.25)', SCALE: 'scale(1.5)' },
+        { opac: 0.6, OPAC: 0.8, zi: 1, ZI: 2, scale: 'scale(1)',    SCALE: 'scale(1.25)' },
+        { opac: 0,   OPAC: 0.6, zi: 0, ZI: 1, scale: 'scale(1)',    SCALE: 'scale(1)' }
+      ];
 
-      // setting newDiv's width and height and setting it to positive value
-      newDiv.style.width = `${Math.abs(width)}px`;
-      newDiv.style.height = `${Math.abs(height)}px`;
-
-      // setting new position of newDiv's position from left and top , if cursor moves from right to left
-      newDiv.style.left = `${Math.min(DivX, currentX)}px`;
-      newDiv.style.top = `${Math.min(DivY, currentY)}px`;
-
-      propertiesSetterInInput()
-
-    }
- 
-// this function sets default values for the div if nothing is set for it    
-function defaultValueSetter(e,Div) {
-      Div.style.left = `${e.clientX-rect.left}px`;
-      Div.style.top = `${e.clientY-rect.top}px`;
-      Div.style.width = "100px";
-      Div.style.height = "100px";
-}    
-
-
-function propertiesSetterInInput() {
-
-  const properties = document.querySelectorAll('.setProperties input');
-  
-  let selectedTarget = newDiv;
-  
-  let computedStyles = getComputedStyle(selectedTarget);
-
-  const rgbToHex =(rgb)=> {
-     if (!rgb) return "#ffffff"; 
-  
-    // Extract the RGB values from the computed style
-     let result = rgb.match(/\d+/g); 
-  
-     if (!result || result.length < 3) return "#ffffff"; // Ensure RGB format is valid
-
-     return "#" + result.slice(0, 3)     // Convert each RGB part to a two-digit hex value
-       .map(x => parseInt(x).toString(16).padStart(2, '0'))
-      .join('');
-}
-  
-  properties.forEach(input => {
-    let styleProperty = input.name; 
-    
-    if (input.type === 'color') {
-      // converted the color to HEX because the <input type="color"> element in HTML accepts color values in the HEX format by default
-      input.value = rgbToHex(computedStyles[styleProperty]); 
-    } else {
-      input.value = computedStyles[styleProperty]; 
-    }
-  });
-}
-
-
-document.querySelectorAll('.setProperties input').forEach(input =>{
-  input.addEventListener('input',() => propertiesSetterFromInput(input));
-})
-
-function propertiesSetterFromInput(input){
-  const newValue = input.value;        
-  const propertyName = input.name;   
-
-  let selectedTarget = newDiv; 
-
-  selectedTarget.style[propertyName] = newValue;
-
-}
-    
-
-// Adding the Resizers
-function addingResizers(Div) {
-
-  if(handlesExist) { 
-    console.log("handlesExist is true , stopped adding Resizers");
-    return;
-  }
-  console.log("Resizers added");
-
-   // for adding different class to different handles
-  const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
-
-  // Mouse move logic
-  const createMouseMoveHandler = (DivX, DivY, isWidth, isHeight) => (e) => {
-
-    propertiesSetterInInput()
-
-    // position of cursor wrt to scree
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
-
-    console.log("currentX ", currentX);
-    console.log("Div is  ",DivX);
-
-    
-
-    if (isWidth) {
-      const width = currentX - DivX;
-      console.log("width: " + width);
-   
-      Div.style.width = `${Math.abs(width)}px`;
-      Div.style.left = `${Math.min(DivX, currentX)}px`;
-    }
-
-    if (isHeight) {
-      const height = currentY - DivY;
-      Div.style.height = `${Math.abs(height)}px`;
-      Div.style.top = `${Math.min(DivY, currentY)}px`;
-    }
-
-  };
-
-  // Common mouse down logic
-  const handleMouseDown = (e, DivX, DivY, isWidth, isHeight) => {
-    const mouseMoveHandler = createMouseMoveHandler(DivX, DivY, isWidth, isHeight);
-
-    const mouseUpHandler = () => {
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      document.removeEventListener('mouseup', mouseUpHandler);
-
-      isDrawing = false;
-      console.log("isDrawing is set to false");
-      handlesExist = true;
-      console.log("handlesExist is set to true");
-
-    };
-
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-  };
-
-  handles.forEach(position => {
-    const handle = document.createElement('div');
-    handle.className = `handle ${position}`;
-    Div.appendChild(handle);
-
-    handle.addEventListener('mousedown', (e) => {
-
-      const offsetX = Div.offsetLeft;
-      const offsetY = Div.offsetTop;
-      const offsetWidth = Div.offsetWidth;
-      const offsetHeight = Div.offsetHeight;
-
-      console.log(offsetX, offsetY, offsetWidth, offsetHeight);
-      console.log("isdv ",offsetX + offsetWidth);
-      
-      
-
-      switch (position) {
-        case 'top-left':
-          handleMouseDown(e, offsetX + offsetWidth, offsetY + offsetHeight, true, true);
-          break;
-        case 'top-right':
-          handleMouseDown(e, offsetX , offsetY + offsetHeight, true, true);
-          break;
-        case 'bottom-right':
-          handleMouseDown(e, offsetX , offsetY, true, true);
-          break;
-        case 'bottom-left':
-          handleMouseDown(e, offsetX + offsetWidth, offsetY , true, true);
-          break;
-        case 'top':
-          handleMouseDown(e, offsetX , offsetY + offsetHeight, false, true);
-          break;
-        case 'bottom':
-          handleMouseDown(e, offsetX, offsetY , false, true);
-          break;
-        case 'left':
-          handleMouseDown(e, offsetX + offsetWidth, offsetY, true, false);
-          break;
-        case 'right':
-          handleMouseDown(e, offsetX , offsetY, true, false);
-          break;
-      }
-    });
-  });
-}
-
-
-function dragger(Div) {
-
-  Div.addEventListener("mousedown", (e)=>{
-    if(e.target.className !== 'rectangle') return;
-
-    handlesExist = true;
-
-    console.log("handlesExist is set to true")
-    document.querySelector('.setProperties').style.display = 'grid'; 
-  
-    Div.style.cursor = "grabbing";
-
-    const rect = Div.getBoundingClientRect();
-    const DivX = e.clientX - rect.left;
-    const DivY = e.clientY - rect.top;
-    const DivLeft = Div.offsetLeft;
-    const DivTop = Div.offsetTop;
-    
-
-    const onMouseDrag = (e) => {
-
-      propertiesSetterInInput()
-
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
-
-      const DragX = currentX - DivX;
-      const DragY = currentY - DivY;
-
-      Div.style.left = `${DragX + DivLeft}px`;
-      Div.style.top = `${DragY + DivTop}px`;
-    };
-
-    const mouseUpDragHandler = () => {
-      document.removeEventListener('mousemove', onMouseDrag);
-      document.removeEventListener('mouseup', mouseUpDragHandler);
-      Div.style.cursor = "grab";
-    };
-
-    document.addEventListener('mousemove', onMouseDrag);
-    document.addEventListener('mouseup', mouseUpDragHandler);
-
-
-  })}
-
-function removingResizers(Div){
-      const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
-
-      if(Div.querySelector('.handle.top'))
-      handles.forEach(position => {
-        const handle = Div.querySelector(`.handle.${position}`);
-        handle.remove()
+      document.querySelectorAll('.Slide').forEach((slide, index) => {
+        const style = slideStyles[index] || slideStyles[slideStyles.length - 1]; // Default to last style if index is out of bounds
+        Object.entries(style).forEach(([key, value]) => {
+          slide.style.setProperty(`--${key}`, value);
+        });
+        slide.classList.add('mover');
       });
-      handlesExist = false;
-      console.log('handlesExist is set to false');
-      
+
+      setTimeout(() => {
+        updateSlides((FirstIndex + 1) % SlideImg.length);
+        // Re-enable buttons after animation completes
+        toggleButtons(false);
+      }, 600); // Duration should match the animation duration
     }
 
+    function moveRight() {
+      status = 'right';
+      // Disable buttons during animation
+      toggleButtons(true);
+
+      let slideContainer = document.getElementById('Slide-container');
+      let slide = document.createElement('div');
+      slide.classList.add('Slide');
+      slide.style.backgroundImage = `url('./images/${SlideImg[(FirstIndex - 1 + SlideImg.length) % SlideImg.length]}')`; // Set image as background
+      slide.style.backgroundSize = 'cover'; // Ensure it covers the entire slide
+      slide.style.backgroundPosition = 'center'; // Center the image
+
+      // Add the slide title inside the slide div
+      let slideTitle = document.createElement('h2');
+      slideTitle.textContent = SlidesText[(FirstIndex - 1 + SlideImg.length) % SlideImg.length];
+      slide.appendChild(slideTitle);
+
+      slideContainer.prepend(slide);
+
+      const slideStyles = [
+        { opac: 0,   OPAC: 0.6, zi: 1, ZI: 0, scale: 'scale(1)',    SCALE: 'scale(1)', left: '-245.5px', LEFT: '246px' },
+        { opac: 0.6, OPAC: 0.8, zi: 1, ZI: 2, scale: 'scale(1)',    SCALE: 'scale(1.25)' },
+        { opac: 0.8, OPAC: 1,   zi: 2, ZI: 3, scale: 'scale(1.25)', SCALE: 'scale(1.5)' },
+        { opac: 1,   OPAC: 0.8, zi: 3, ZI: 2, scale: 'scale(1.5)',  SCALE: 'scale(1.25)' },
+        { opac: 0.8, OPAC: 0.6, zi: 2, ZI: 1, scale: 'scale(1.25)', SCALE: 'scale(1)' },
+        { opac: 0.6, OPAC: 0,   zi: 1, ZI: 0, scale: 'scale(1)',    SCALE: 'scale(1)' }
+      ];
+
+      document.querySelectorAll('.Slide').forEach((slide, index) => {
+        const style = slideStyles[index] || slideStyles[slideStyles.length - 1]; // Default to last style if index is out of bounds
+        Object.entries(style).forEach(([key, value]) => {
+          slide.style.setProperty(`--${key}`, value);
+        });
+        slide.classList.add('mover');
+      });
+
+      setTimeout(() => {
+        updateSlides((FirstIndex - 1 + SlideImg.length) % SlideImg.length);
+        // Re-enable buttons after animation completes
+        toggleButtons(false);
+      }, 600); // Duration should match the animation duration
+    }
+
+    document.getElementById('next').addEventListener('click', moveLeft);
+    document.getElementById('prev').addEventListener('click', moveRight);
+
+    // Initial call to populate slides
+    updateSlides(0);
   </script>
-
-
 </body>
 </html>
-
